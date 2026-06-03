@@ -1,6 +1,6 @@
 from utils.pdf_reader import extract_document
 
-pdf_path = "sample.pdf"
+pdf_path = "balance_Sheet.pdf"
 
 document_text = extract_document(pdf_path)
 

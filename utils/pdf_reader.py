@@ -50,4 +50,4 @@ def extract_document(file_path):
             ]
       combined_text += " | ".join(clean_row) + "\n"
 
-    return combined_text
+  return combined_text
