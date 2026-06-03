@@ -1,10 +1,13 @@
 from dotenv import load_dotenv
-from langchain_openai import OpenAI
+from langchain_openai import OpenAIEmbeddings
 
 load_dotenv()
 
-llm=OpenAI(model="gpt-4o-mini")
+embeddings=OpenAIEmbeddings(
+  model="text-embedding-3-small"
+)
 
-response= llm.invoke("Say hello")
+result=embeddings.embed_query("Hello AI Financial Audit Assistant")
 
-print(response)
+print(f"Vector Length: {len(result)}")
+print(result[:5])
