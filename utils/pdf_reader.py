@@ -29,3 +29,25 @@ def extract_table(file_path):
         all_tables.extend(tables)
 
   return all_tables
+
+
+def extract_document(file_path):
+
+  text=extract_text(file_path)
+  tables=extract_table(file_path)
+
+  combined_text= text + "\n\n"
+
+  for i, table in enumerate(tables, start=1):
+
+    combined_text += f"\n--- TABLE {i} ---\n"
+
+    for row in table:
+
+      clean_row = [
+                cell if cell is not None else ""
+                for cell in row
+            ]
+      combined_text += " | ".join(clean_row) + "\n"
+
+    return combined_text
