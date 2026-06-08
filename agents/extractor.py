@@ -38,7 +38,20 @@ Context:
 """
 )
 
-
+FIELDS = [
+    "firm_name",
+    "ca_name",
+    "pan_number",
+    "net_profit",
+    "gross_profit",
+    "turnover",
+    "closing_stock",
+    "capital",
+    "fixed_assets",
+    "debtors",
+    "creditors",
+    "cash"
+]
 
 
 def retrieve_financial_item(
@@ -69,3 +82,20 @@ def extract_financial_data(context):
    )
 
    return result
+
+
+def get_context_for_extraction(retriever):
+   contexts=[]
+
+   for field in FIELDS:
+      
+      docs=retriever.invoke(field)
+
+      chunk="\n\n".join(
+         doc.page_content
+         for doc in docs
+      )
+
+      contexts.append(chunk)
+
+      return "\n\n".join(contexts)
