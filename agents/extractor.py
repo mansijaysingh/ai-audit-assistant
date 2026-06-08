@@ -5,97 +5,152 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-llm=ChatOpenAI(
-  model="gpt-4o-mini"
+
+llm = ChatOpenAI(
+    model="gpt-4o-mini"
 )
 
 
-prompt=PromptTemplate.from_template(
-   """
+BALANCE_SHEET_FIELDS = [
+    "firm name",
+    "PAN number",
+    "assessment year",
+
+    "sales",
+    "turnover",
+
+    "gross profit",
+    "net profit",
+
+    "opening stock",
+    "closing stock",
+
+    "purchases",
+
+    "capital",
+
+    "fixed assets",
+
+    "sundry debtors",
+
+    "sundry creditors",
+
+    "cash",
+
+    "bank balance"
+]
+
+
+CB3_FIELDS = [
+    "firm name",
+    "CA name",
+    "PAN number",
+    "assessment year",
+    "turnover",
+    "net profit",
+    "depreciation",
+    "UDIN",
+    "membership number",
+    "GST turnover"
+]
+
+
+prompt = PromptTemplate.from_template(
+    """
 You are a financial audit data extraction expert.
 
-Extract the following fields from the context.
+Document Type:
+{document_type}
 
-Fields:
+Extract structured financial data from the provided context.
 
+If document_type is "current" or "previous", extract these fields:
+firm_name
+pan_number
+assessment_year
+
+sales
+turnover
+
+gross_profit
+net_profit
+
+opening_stock
+closing_stock
+
+purchases
+
+capital_closing
+
+fixed_assets_closing
+
+debtors
+
+creditors
+
+cash
+
+bank_balance
+
+If document_type is "3cb", extract these fields:
 firm_name
 ca_name
 pan_number
-net_profit
-gross_profit
+assessment_year
 turnover
+net_profit
+depreciation
+udin
+membership_number
+gst_turnover
 
 Instructions:
-
 - Return ONLY valid JSON.
 - If a field is not found, return null.
 - Do not explain anything.
 - Do not return markdown.
+- Use numbers without commas where possible.
 
 Context:
-
 {context}
 """
 )
 
-FIELDS = [
-    "firm_name",
-    "ca_name",
-    "pan_number",
-    "net_profit",
-    "gross_profit",
-    "turnover",
-    "closing_stock",
-    "capital",
-    "fixed_assets",
-    "debtors",
-    "creditors",
-    "cash"
-]
+
+def get_context_for_extraction(retriever, document_type):
+
+    if document_type == "3cb":
+        fields = CB3_FIELDS
+    else:
+        fields = BALANCE_SHEET_FIELDS
+
+    contexts = []
+
+    for field in fields:
+
+        docs = retriever.invoke(field)
+
+        chunk = "\n\n".join(
+            doc.page_content
+            for doc in docs
+        )
+
+        contexts.append(chunk)
+
+    return "\n\n".join(contexts)
 
 
-def retrieve_financial_item(
-    item_name,
-    retriever
-):
-  
-   docs=retriever.invoke(item_name)
+def extract_financial_data(context, document_type):
 
-   context= "\n\n".join(
-      doc.page_content
-      for doc in docs
-   )
+    parser = JsonOutputParser()
 
-   return context
+    chain = prompt | llm | parser
 
+    result = chain.invoke(
+        {
+            "context": context,
+            "document_type": document_type
+        }
+    )
 
-def extract_financial_data(context):
-   
-   parser=JsonOutputParser()
-
-   chain=prompt | llm | parser
-
-   result= chain.invoke(
-      {
-         "context" : context
-      }
-   )
-
-   return result
-
-
-def get_context_for_extraction(retriever):
-   contexts=[]
-
-   for field in FIELDS:
-      
-      docs=retriever.invoke(field)
-
-      chunk="\n\n".join(
-         doc.page_content
-         for doc in docs
-      )
-
-      contexts.append(chunk)
-
-      return "\n\n".join(contexts)
+    return result
