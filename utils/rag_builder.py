@@ -1,6 +1,9 @@
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 def build_vector_store(texts_dict):
@@ -31,4 +34,13 @@ def build_vector_store(texts_dict):
     embeddings
   )
 
-  return vectore_store.as_retriever()
+  return vectore_store.as_retriever(
+    search_kwargs={"k": 4}
+  )
+
+
+def get_relevant_chunks(query, retriever):
+
+  docs= retriever.invoke(query)
+
+  return docs
