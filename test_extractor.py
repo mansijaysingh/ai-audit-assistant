@@ -1,6 +1,6 @@
 from utils.pdf_reader import extract_document
 from utils.rag_builder import build_vector_store
-from agents.extractor import retrieve_financial_item
+from agents.extractor import retrieve_financial_item, extract_financial_data
 
 texts_dict={
   "current": extract_document("BSnew.pdf")
@@ -9,9 +9,14 @@ texts_dict={
 
 retriever=build_vector_store(texts_dict)
 
-result= retrieve_financial_item(
-  "net profit",
+context= retrieve_financial_item(
+  "net profit gross profit turnover firm name",
   retriever
 )
 
-print(result[:3000])
+result=extract_financial_data(
+  context
+)
+
+
+print(result)

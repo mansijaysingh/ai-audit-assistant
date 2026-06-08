@@ -10,6 +10,37 @@ llm=ChatOpenAI(
 )
 
 
+prompt=PromptTemplate.from_template(
+   """
+You are a financial audit data extraction expert.
+
+Extract the following fields from the context.
+
+Fields:
+
+firm_name
+ca_name
+pan_number
+net_profit
+gross_profit
+turnover
+
+Instructions:
+
+- Return ONLY valid JSON.
+- If a field is not found, return null.
+- Do not explain anything.
+- Do not return markdown.
+
+Context:
+
+{context}
+"""
+)
+
+
+
+
 def retrieve_financial_item(
     item_name,
     retriever
@@ -23,3 +54,18 @@ def retrieve_financial_item(
    )
 
    return context
+
+
+def extract_financial_data(context):
+   
+   parser=JsonOutputParser()
+
+   chain=prompt | llm | parser
+
+   result= chain.invoke(
+      {
+         "context" : context
+      }
+   )
+
+   return result
