@@ -1,69 +1,50 @@
 from utils.pdf_reader import extract_document
 from utils.rag_builder import build_vectorstore
-from agents.extractor import get_context_for_extraction, extract_financial_data
+from agents.extractor import extract_financial_data
 
-
-# Change these file names according to your PDFs
-current_pdf = "BSnew.pdf"
+# ── PDF FILES — apne actual file names yahan likho ────────────────────────────
+current_pdf  = "BSnew.pdf"
 previous_pdf = "BSold.pdf"
-cb3_pdf = "3cb.pdf"
+cb3_pdf      = "3cb.pdf"
 
-
-current_text = extract_document(current_pdf)
+# ── STEP 1: EXTRACT TEXT ──────────────────────────────────────────────────────
+print("Step 1: Extracting text from PDFs...")
+current_text  = extract_document(current_pdf)
 previous_text = extract_document(previous_pdf)
-cb3_text = extract_document(cb3_pdf)
+cb3_text      = extract_document(cb3_pdf)
 
+# ── STEP 2: BUILD FAISS RETRIEVERS ────────────────────────────────────────────
+print("\nStep 2: Building FAISS vector stores...")
+current_retriever  = build_vectorstore({"current":  current_text})
+previous_retriever = build_vectorstore({"previous": previous_text})
+cb3_retriever      = build_vectorstore({"3cb":      cb3_text})
 
-current_retriever = build_vectorstore({
-    "current": current_text
-})
+# ── STEP 3: EXTRACT DATA ──────────────────────────────────────────────────────
+print("\nStep 3: Running Extractor Agent...")
+current_data  = extract_financial_data(current_retriever,  "current")
+previous_data = extract_financial_data(previous_retriever, "previous")
+cb3_data      = extract_financial_data(cb3_retriever,      "3cb")
 
-previous_retriever = build_vectorstore({
-    "previous": previous_text
-})
+# ── STEP 4: PRINT RESULTS ─────────────────────────────────────────────────────
+print("\n========== CURRENT YEAR DATA ==========")
+for key, val in current_data.items():
+    print(f"  {key}: {val}")
 
-cb3_retriever = build_vectorstore({
-    "3cb": cb3_text
-})
+print("\n========== PREVIOUS YEAR DATA ==========")
+for key, val in previous_data.items():
+    print(f"  {key}: {val}")
 
+print("\n========== 3CB DATA ==========")
+for key, val in cb3_data.items():
+    print(f"  {key}: {val}")
 
-current_context = get_context_for_extraction(
-    current_retriever,
-    "current"
-)
-
-previous_context = get_context_for_extraction(
-    previous_retriever,
-    "previous"
-)
-
-cb3_context = get_context_for_extraction(
-    cb3_retriever,
-    "3cb"
-)
-
-
-current_data = extract_financial_data(
-    current_context,
-    "current"
-)
-
-previous_data = extract_financial_data(
-    previous_context,
-    "previous"
-)
-
-cb3_data = extract_financial_data(
-    cb3_context,
-    "3cb"
-)
-
-
-print("\n========== CURRENT DATA ==========\n")
-print(current_data)
-
-print("\n========== PREVIOUS DATA ==========\n")
-print(previous_data)
-
-print("\n========== 3CB DATA ==========\n")
-print(cb3_data)
+# ── STEP 5: SANITY CHECK ──────────────────────────────────────────────────────
+print("\n========== SANITY CHECK ==========")
+print(f"  Client firm (current)  : {current_data.get('client_firm_name')}")
+print(f"  CA firm (current)      : {current_data.get('ca_firm_name')}")
+print(f"  Client firm (3CB)      : {cb3_data.get('client_firm_name')}")
+print(f"  CA firm (3CB)          : {cb3_data.get('ca_firm_name')}")
+print(f"  Net Profit (current)   : {current_data.get('net_profit')}")
+print(f"  Net Profit (3CB)       : {cb3_data.get('net_profit')}")
+print(f"  UDIN (3CB)             : {cb3_data.get('udin')}")
+print(f"  Membership No (3CB)    : {cb3_data.get('membership_number')}")

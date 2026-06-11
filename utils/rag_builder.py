@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-def build_vector_store(texts_dict):
+def build_vectorstore(texts_dict):
 
   text_splitter=RecursiveCharacterTextSplitter(
     chunk_size=500,
